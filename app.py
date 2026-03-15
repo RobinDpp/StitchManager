@@ -34,7 +34,7 @@ with st.sidebar:
     ])
     st.divider()
     st.success("Boutique : **Robin's Stitches**")
-    st.caption("Statut API : 🟢 Authentifié")
+    st.caption("Statut API : 🟠 En cours")
 
 # --- PAGE : TABLEAU DE BORD (Rempli pour Maverick) ---
 if menu == "📊 Tableau de Bord":
