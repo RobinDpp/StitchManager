@@ -3,97 +3,136 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-st.set_page_config(page_title="StitchManager - Pro Dashboard", layout="wide")
+# --- CONFIGURATION ---
+st.set_page_config(page_title="StitchManager Pro", layout="wide", page_icon="🧵")
 
-# --- NAVIGATION ---
-st.sidebar.title("🧵 StitchManager")
-menu = st.sidebar.radio("Navigation", ["Tableau de Bord", "Statistiques Avancées", "Nouveau Listing", "Inventaire"])
+# Masquer les éléments Streamlit pour le sérieux (CORRIGÉ)
+st.markdown("""
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    </style>
+    """, unsafe_allow_html=True)
 
-# --- PAGE : DASHBOARD (Vue d'ensemble) ---
-if menu == "Tableau de Bord":
-    st.title("🏠 Aperçu de la Boutique")
-    
-    # Métriques principales
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Chiffre d'Affaires (30j)", "245.80 €", "+15%")
-    col2.metric("Commandes", "38", "+5")
-    col3.metric("Visites", "1,240", "-2%")
-    col4.metric("Taux de Conv.", "3.1%", "+0.4%")
+# --- FONCTIONS UTILITAIRES ---
+def clean_tags(tags_string):
+    """Nettoie et valide les tags pour la conformité Etsy (max 13 tags, 20 chars chacun)"""
+    raw_tags = [t.strip() for t in tags_string.split(",") if t.strip()]
+    valid_tags = [t[:20] for t in raw_tags[:13]]
+    return valid_tags
 
+# --- SIDEBAR (Version épurée mais fonctionnelle) ---
+with st.sidebar:
+    st.title("🧵 StitchManager")
+    st.caption("Système de Gestion d'Inventaire V1.0")
     st.divider()
-    
-    # Graphique rapide
-    st.subheader("📈 Évolution des ventes (7 derniers jours)")
-    chart_data = pd.DataFrame(
-        np.random.randn(7, 1) + [10],
-        columns=['Ventes (€)'],
-        index=[(datetime.now() - timedelta(days=i)).strftime('%d/%m') for i in range(6, -1, -1)]
-    )
-    st.line_chart(chart_data)
+    menu = st.radio("Navigation", [
+        "📊 Tableau de Bord", 
+        "➕ Créer un Listing", 
+        "🗃️ Gestion des Stocks", 
+        "📈 Analyse Financière"
+    ])
+    st.divider()
+    st.success("Boutique : **Robin's Stitches**")
+    st.caption("Statut API : 🟢 Authentifié")
 
-# --- PAGE : STATISTIQUES AVANCÉES (Le "Cerveau" du Business) ---
-elif menu == "Statistiques Avancées":
-    st.title("📊 Analyse de Performance")
+# --- PAGE : TABLEAU DE BORD (Rempli pour Maverick) ---
+if menu == "📊 Tableau de Bord":
+    st.title("Tableau de Bord des Ventes")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Chiffre d'Affaires (30j)", "428.50 €", "+12.4%")
+    c2.metric("Commandes", "64", "+8")
+    c3.metric("Taux de conversion", "3.2%", "+0.5%")
+    c4.metric("Panier moyen", "6.69 €", "-0.10 €")
     
-    tab1, tab2, tab3 = st.tabs(["💰 Revenus & Profits", "🎯 Performance Designs", "🌍 Trafic & Tags"])
-    
-    with tab1:
-        st.subheader("Décomposition des Revenus")
+    st.divider()
+    st.subheader("📈 Revenus Quotidiens")
+    revenues = [25, 32, 18, 45, 60, 38, 22, 55, 40, 35, 70, 42, 30, 48, 52]
+    st.area_chart(revenues)
+
+# --- PAGE : CRÉER UN LISTING (LA PARTIE QUE TU AS VALIDÉE) ---
+elif menu == "➕ Créer un Listing":
+    st.title("🛠️ Éditeur de Fiche Produit")
+    st.info("Préparez vos fiches produits numériques de manière structurée pour une synchronisation optimale.")
+
+    tab_info, tab_files, tab_shipping = st.tabs(["📝 Détails de l'annonce", "💾 Fichiers Numériques", "💰 Prix & Rentabilité"])
+
+    with tab_info:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("Informations Principales")
+            title = st.text_input("Titre de l'article", placeholder="Ex: Patron de point de croix - Collection Printemps")
+            category = st.selectbox("Catégorie", ["Patrons", "Broderie", "Artisanat Numérique"])
+            section = st.text_input("Section de la boutique")
+            
+        with col2:
+            st.subheader("Optimisation du Référencement")
+            tags_input = st.text_area("Mots-clés (séparés par des virgules)", placeholder="point de croix, moderne, diy...")
+            valid_tags = clean_tags(tags_input)
+            
+            st.write("**Tags validés (max 13) :**")
+            cols = st.columns(4)
+            for i, tag in enumerate(valid_tags):
+                cols[i % 4].caption(f"✅ {tag}")
+
+        st.divider()
+        description = st.text_area("Description détaillée", height=300)
+        materials = st.text_input("Matériaux (ex: PDF, Fils DMC, Aïda)")
+
+    with tab_files:
+        st.subheader("Gestion des fichiers joints")
         c1, c2 = st.columns(2)
         with c1:
-            # Simulation données mensuelles
-            months = ["Jan", "Fev", "Mar", "Avr", "Mai", "Juin"]
-            revs = [150, 210, 180, 310, 280, 420]
-            st.bar_chart(pd.DataFrame(revs, index=months, columns=["Revenu Mensuel (€)"]))
+            st.file_uploader("🖼️ Images de présentation (Mockups)", accept_multiple_files=True)
         with c2:
-            st.write("**Récapitulatif financier :**")
-            st.write(f"- Panier moyen : **6.80 €**")
-            st.write(f"- Frais Etsy estimés : **-42.50 €**")
-            st.write(f"- Profit net estimé : **377.50 €**")
+            st.file_uploader("📄 Fichiers sources (PDF / ZIP)", accept_multiple_files=True)
 
-    with tab2:
-        st.subheader("Top 5 des Designs les plus vendus")
-        top_designs = pd.DataFrame({
-            'Design': ['Gothic Raven', 'Vintage Rose', 'Starry Night', 'Cute Bat', 'Steampunk Owl'],
-            'Ventes': [45, 32, 28, 25, 18],
-            'Favoris': [120, 85, 92, 110, 55]
-        })
-        st.table(top_designs)
-        
-    with tab3:
-        st.subheader("Analyse des Tags (Mots-clés)")
-        st.write("Quels tags génèrent le plus de clics ?")
-        tags_data = pd.DataFrame({
-            'Tag': ['cross stitch pattern', 'modern embroidery', 'gothic decor', 'pdf download', 'dmc colors'],
-            'Efficacité (%)': [95, 82, 75, 68, 45]
-        }).set_index('Tag')
-        st.bar_chart(tags_data)
+    with tab_shipping:
+        st.subheader("Calculateur de Profit")
+        col_p1, col_p2 = st.columns(2)
+        with col_p1:
+            base_price = st.number_input("Prix de vente souhaité (€)", value=6.50, step=0.10)
+            tax_rate = st.slider("TVA estimée (%)", 0, 20, 20)
+        with col_p2:
+            total_fees = 0.18 + (base_price * 0.065) + (base_price * 0.04 + 0.30)
+            profit = base_price - total_fees
+            st.metric("Profit Net Estimé", f"{profit:.2f} €", delta=f"-{total_fees:.2f} € de frais")
 
-# --- PAGE : NOUVEAU LISTING ---
-elif menu == "Nouveau Listing":
-    st.title("📦 Créer une annonce")
-    # (Le code précédent de création reste ici...)
-    st.info("Utilisez cette page pour glisser-déposer les éléments depuis l'App Factory.")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.file_uploader("Fichiers (Images/PDFs)", accept_multiple_files=True)
-    with col2:
-        st.text_input("Titre")
-        st.text_area("Description", height=200)
-    
-    if st.button("Publier en Brouillon"):
-        st.success("Données prêtes pour l'envoi API.")
+    st.divider()
+    if st.button("📤 Enregistrer le Brouillon sur Etsy", type="primary", use_container_width=True):
+        st.success(f"L'article '{title}' a été préparé avec succès.")
 
-# --- PAGE : INVENTAIRE ---
-elif menu == "Inventaire":
-    st.title("📋 Gestion de l'Inventaire")
-    st.write("Liste de tous vos patrons numériques actifs.")
-    # Simulation liste
-    inventory = pd.DataFrame({
-        'ID': ['001', '002', '003'],
-        'Nom': ['Gothic Raven', 'Vintage Rose', 'Cute Bat'],
-        'Prix': [6.50, 7.20, 5.90],
-        'Status': ['En ligne', 'En ligne', 'Brouillon']
+# --- PAGE : GESTION DES STOCKS ---
+elif menu == "🗃️ Gestion des Stocks":
+    st.title("🗃️ Inventaire des Produits Numériques")
+    df = pd.DataFrame({
+        "ID": ["ST-001", "ST-002", "ST-003", "ST-004"],
+        "Nom": ["Gothic Raven", "Vintage Floral", "Night Owl", "Cute Bat"],
+        "Prix": [6.50, 7.20, 5.90, 6.00],
+        "Ventes": [142, 89, 45, 210],
+        "Status": ["Actif", "Actif", "Brouillon", "Actif"]
     })
-    st.dataframe(inventory, use_container_width=True)
+    st.dataframe(df, use_container_width=True, hide_index=True)
+
+# --- PAGE : ANALYSE FINANCIÈRE ---
+elif menu == "📈 Analyse Financière":
+    st.title("📈 Analyses de Performance")
+    col_a, col_b = st.columns(2)
+    
+    with col_a:
+        st.write("### Top Catégories")
+        # Création d'un DataFrame propre pour le graphique
+        chart_data = pd.DataFrame({
+            "Styles": ["Gothique", "Floral", "Moderne", "Saisonnier"],
+            "Ventes": [40, 25, 20, 15]
+        }).set_index("Styles") # On met les noms en index pour l'axe X
+        
+        st.bar_chart(chart_data)
+        
+    with col_b:
+        st.write("### Top Mots-clés (Tags)")
+        tags_df = pd.DataFrame({
+            "Tag": ["cross stitch", "modern embroidery", "gothic decor"], 
+            "Clics": [1200, 850, 780]
+        })
+        st.table(tags_df)
